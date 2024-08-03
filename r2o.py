@@ -13,8 +13,8 @@ created: {created}
 
 '''
 
-re_daily = re.compile(r'(January|February|March|April|May|June|July|August|September|October|November|December) ([0-9]+)[a-z]{2}, ([0-9]{4})')
-re_daylink = re.compile(r'(\[\[)([January|February|March|April|May|June|July|August|September|October|November|December [0-9]+[a-z]{2}, [0-9]{4})(\]\])')
+re_daily = re.compile(r'^(January|February|March|April|May|June|July|August|September|October|November|December) ([0-9]+)[a-z]{2}, ([0-9]{4})$')
+re_daylink = re.compile(r'^(\[\[)([January|February|March|April|May|June|July|August|September|October|November|December [0-9]+[a-z]{2}, [0-9]{4})(\]\])$')
 re_blockmentions = re.compile(r'({{mentions: \(\()(.{9})(\)\)}})')
 re_blockembed = re.compile(r'({{embed: \(\()(.{9})(\)\)}})')
 re_blockref = re.compile(r'(\(\()(.{9})(\)\))')
@@ -73,7 +73,7 @@ def expand_children(block, uid2block, referenced_uids, level=0):
     for b in block.get('children', []):
         prefix = ''
         if level >= 1:
-            prefix = '    ' * level
+            prefix = '  ' * level
         s = b['string']
         children = b.get('children', None)
 
@@ -93,7 +93,8 @@ def expand_children(block, uid2block, referenced_uids, level=0):
             postfix = ''
 
         # b id magic
-        s = prefix + replace_blockrefs(s, uid2block, referenced_uids) + postfix
+        # s = prefix + replace_blockrefs(s, uid2block, referenced_uids) + postfix
+        s = prefix + s + postfix
         if '\n' in s:
             new_s = s[:-1]
             new_s = new_s.replace('\n', '\n'+prefix)
@@ -107,8 +108,8 @@ def expand_children(block, uid2block, referenced_uids, level=0):
 
 j = json.load(open(sys.argv[1], mode='rt', encoding='utf-8', errors='ignore'))
 
-odir = 'md'
-ddir = 'md/daily'
+odir = './'
+ddir = './daily'
 os.makedirs(ddir, exist_ok=True)
 
 print('Pass 1: scan all pages')
@@ -164,7 +165,7 @@ for p in tqdm(pages):
     lines = expand_children(p, uid2block, referenced_uids)
     try:
         with open(ofiln, mode='wt', encoding='utf-8') as f:
-            f.write(yaml.format(**p))
+            # f.write(yaml.format(**p))
             f.write('\n'.join(lines))
     except:
         error_pages.append({'page':p, 'content': lines})
@@ -177,5 +178,5 @@ if error_pages:
         c = ep['content']
         print(f'Title: >{t}<')
         print(f'Content:')
-        print('    ' + '\n    '.join(c))
+        print('  ' + '\n    '.join(c))
 print('Done!')
